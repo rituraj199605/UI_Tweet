@@ -382,6 +382,88 @@ The layout adapts to different screen sizes using Tailwind's responsive classes:
 
 ---
 
+# Organic Tweets Desktop App
+
+A calming environment for composing and saving tweets, built with React, TypeScript, and Electron.
+
+## Features
+
+- 🌿 Soothing, distraction-free interface for composing tweets
+- 📱 Support for images and videos (up to 4 media files per tweet)
+- 💾 Local storage of tweets
+- 🖥️ Cross-platform desktop application (Windows, macOS, Linux)
+
+## Development
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v16+)
+- [npm](https://www.npmjs.com/) (v7+)
+- [ImageMagick](https://imagemagick.org/) (for icon generation)
+
+### Setup
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/organic-tweets.git
+cd organic-tweets
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Generate app icons (optional, requires ImageMagick):
+```bash
+node electron/generate-icons.js
+```
+
+### Development Mode
+
+Run the app in development mode with hot-reload:
+
+```bash
+npm run electron:dev
+```
+
+This will start both the Vite development server and Electron.
+
+### Building for Production
+
+To build the app for production:
+
+```bash
+npm run electron:build
+```
+
+This will create distributable packages in the `dist-electron` directory.
+
+## Technology Stack
+
+- [React](https://reactjs.org/) - UI library
+- [TypeScript](https://www.typescriptlang.org/) - Type safety
+- [Vite](https://vitejs.dev/) - Build tool
+- [Electron](https://www.electronjs.org/) - Desktop app framework
+- [Tailwind CSS](https://tailwindcss.com/) - Styling
+- [Lucide React](https://lucide.dev/) - Icons
+- [Electron Store](https://github.com/sindresorhus/electron-store) - Persistent storage
+
+## Customization
+
+- Colors can be adjusted in the Tailwind configuration (`tailwind.config.js`)
+- App metadata can be modified in `package.json` and `electron-builder.json`
+
+## License
+
+MIT
+
+---
+
+Made with ❤️ using Electron and React
+
+---
+
 **Document Version**: 1.0  
 **Last Updated**: April 27, 2025  
 **Author**: Ritu Raj Singh
