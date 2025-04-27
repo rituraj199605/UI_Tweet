@@ -1,12 +1,40 @@
 {
-  "name": "tweet-app",
+  "name": "organic-tweets",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "A calming environment for composing tweets",
+  "author": "Your Name",
+  "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron:dev": "cross-env NODE_ENV=development ELECTRON_START_URL=http://localhost:5173 concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
+    "electron:build": "npm run build && electron-builder",
+    "electron:start": "electron ."
+  },
+  "build": {
+    "appId": "com.organictweets.app",
+    "productName": "Organic Tweets",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.icns"
+    },
+    "win": {
+      "icon": "build/icon.ico"
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "category": "Utility"
+    }
   },
   "dependencies": {
     "lucide-react": "^0.503.0",
@@ -19,6 +47,12 @@
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^30.5.1",
+    "electron-builder": "^24.13.3",
+    "electron-squirrel-startup": "^1.0.1",
+    "electron-store": "^10.0.1",
     "eslint": "^9.22.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
@@ -27,6 +61,8 @@
     "tailwindcss": "^3.4.17",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.26.1",
-    "vite": "^6.3.1"
+    "vite": "^6.3.1",
+    "vite-electron-plugin": "^0.8.2",
+    "wait-on": "^7.2.0"
   }
 }

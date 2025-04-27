@@ -1,17 +1,33 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Save, Trash2, CloudLightning, Send, Image, Video, X, Camera, Film } from 'lucide-react';
 
+// Type for Tweet
+interface Tweet {
+  id: number;
+  text: string;
+  date: string;
+  media: MediaFile[];
+}
+
+// Type for Media File
+interface MediaFile {
+  id: number;
+  type: string;
+  url: string;
+  name: string;
+}
+
 export default function TweetComposer() {
   const [tweetText, setTweetText] = useState('');
-  const [savedTweets, setSavedTweets] = useState([]);
+  const [savedTweets, setSavedTweets] = useState<Tweet[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isDetailView, setIsDetailView] = useState(false);
-  const [selectedTweet, setSelectedTweet] = useState(null);
-  const [mediaFiles, setMediaFiles] = useState([]);
-  const [activeMediaTab, setActiveMediaTab] = useState('image'); // 'image' or 'video'
+  const [selectedTweet, setSelectedTweet] = useState<Tweet | null>(null);
+  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
+  const [, setActiveMediaTab] = useState('image'); // 'image' or 'video'
   
-  const imageInputRef = useRef(null);
-  const videoInputRef = useRef(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   
   const MAX_CHARS = 280;
   const MAX_MEDIA_FILES = 4;
@@ -19,31 +35,58 @@ export default function TweetComposer() {
   const isLimitReached = charsRemaining < 0;
   const canAddMoreMedia = mediaFiles.length < MAX_MEDIA_FILES;
 
+  // Check if we're running in Electron
+  const isElectron = window.electron !== undefined;
+
+  // Load saved tweets on component mount
+  useEffect(() => {
+    const loadSavedTweets = async () => {
+      if (isElectron) {
+        try {
+          const tweets = await window.electron.tweetStorage.getTweets();
+          setSavedTweets(tweets || []);
+        } catch (error) {
+          console.error('Failed to load tweets from Electron storage:', error);
+        }
+      }
+    };
+
+    loadSavedTweets();
+  }, []);
+
   const handleSaveTweet = () => {
     if ((tweetText.trim() === '' && mediaFiles.length === 0) || isLimitReached) return;
     
     setIsSaving(true);
     
-    // Simulate saving delay
-    setTimeout(() => {
-      const newTweet = {
-        id: Date.now(),
-        text: tweetText,
-        date: new Date().toLocaleString(),
-        media: [...mediaFiles]
-      };
-      
-      setSavedTweets([newTweet, ...savedTweets]);
-      setTweetText('');
-      setMediaFiles([]);
-      setIsSaving(false);
-    }, 800);
+    // Create the new tweet
+    const newTweet: Tweet = {
+      id: Date.now(),
+      text: tweetText,
+      date: new Date().toLocaleString(),
+      media: [...mediaFiles]
+    };
+    
+    // Update local state
+    const updatedTweets = [newTweet, ...savedTweets];
+    setSavedTweets(updatedTweets);
+    
+    // Save to Electron storage if available
+    if (isElectron) {
+      window.electron.tweetStorage.saveTweets(updatedTweets)
+        .catch(err => console.error('Failed to save tweets to Electron storage:', err));
+    }
+    
+    // Reset the form
+    setTweetText('');
+    setMediaFiles([]);
+    setIsSaving(false);
   };
   
-  const handleFileSelect = (e, type) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
     if (!canAddMoreMedia) return;
     
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
     
     // Create a preview URL
@@ -57,22 +100,31 @@ export default function TweetComposer() {
     }]);
     
     // Reset the input
-    e.target.value = null;
+    e.target.value = '';
   };
   
-  const removeMedia = (id) => {
+  const removeMedia = (id: number) => {
     setMediaFiles(mediaFiles.filter(file => file.id !== id));
   };
   
-  const handleDeleteTweet = (id) => {
-    setSavedTweets(savedTweets.filter(tweet => tweet.id !== id));
+  const handleDeleteTweet = (id: number) => {
+    // Update local state
+    const updatedTweets = savedTweets.filter(tweet => tweet.id !== id);
+    setSavedTweets(updatedTweets);
+    
+    // Delete from Electron storage if available
+    if (isElectron) {
+      window.electron.tweetStorage.deleteTweet(id)
+        .catch(err => console.error('Failed to delete tweet from Electron storage:', err));
+    }
+    
     if (selectedTweet && selectedTweet.id === id) {
       setIsDetailView(false);
       setSelectedTweet(null);
     }
   };
   
-  const viewTweetDetail = (tweet) => {
+  const viewTweetDetail = (tweet: Tweet) => {
     setSelectedTweet(tweet);
     setIsDetailView(true);
   };
@@ -260,7 +312,13 @@ export default function TweetComposer() {
   );
 }
 
-function TweetCard({ tweet, onDelete, onClick }) {
+interface TweetCardProps {
+  tweet: Tweet;
+  onDelete: (id: number) => void;
+  onClick: () => void;
+}
+
+function TweetCard({ tweet, onDelete, onClick }: TweetCardProps) {
   // Truncate long tweets for the card view
   const displayText = tweet.text.length > 140 
     ? tweet.text.substring(0, 140) + '...'
@@ -318,7 +376,13 @@ function TweetCard({ tweet, onDelete, onClick }) {
   );
 }
 
-function TweetDetailView({ tweet, onBack, onDelete }) {
+interface TweetDetailViewProps {
+  tweet: Tweet | null;
+  onBack: () => void;
+  onDelete: (id: number) => void;
+}
+
+function TweetDetailView({ tweet, onBack, onDelete }: TweetDetailViewProps) {
   if (!tweet) return null;
   
   const hasMedia = tweet.media && tweet.media.length > 0;
